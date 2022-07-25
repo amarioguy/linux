@@ -19,3 +19,7 @@ struct pasemi_smbus {
 };
 
 int pasemi_i2c_common_probe(struct pasemi_smbus *smbus);
+
+extern int use_irq;
+
+irqreturn_t apple_i2c_irq_handler(int irq, void *dev_id);

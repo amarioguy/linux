@@ -21,6 +21,7 @@
 #define REG_MTXFIFO	0x00
 #define REG_MRXFIFO	0x04
 #define REG_SMSTA	0x14
+#define REG_IMASK   0x18
 #define REG_CTL		0x1c
 #define REG_REV		0x28
 
@@ -40,6 +41,10 @@
 #define CTL_MTR		0x00000200
 #define CTL_EN		0x00000800
 #define CTL_CLK_M	0x000000ff
+
+static DECLARE_COMPLETION(apple_i2c_irq_completion);
+
+int use_irq;
 
 static inline void reg_write(struct pasemi_smbus *smbus, int reg, int val)
 {
@@ -80,12 +85,23 @@ static int pasemi_smb_waitready(struct pasemi_smbus *smbus)
 {
 	int timeout = 10;
 	unsigned int status;
-
 	status = reg_read(smbus, REG_SMSTA);
 
-	while (!(status & SMSTA_XEN) && timeout--) {
+	if(use_irq)
+	{
+		//unmask IRQs
+		reg_write(smbus, REG_IMASK, 0);
+		reinit_completion(&apple_i2c_irq_completion);
+		wait_for_completion(&apple_i2c_irq_completion);
+		status = reg_read(smbus, REG_SMSTA);
+	}
+	else
+	{
+		while (!(status & SMSTA_XEN) && timeout--) {
 		msleep(1);
 		status = reg_read(smbus, REG_SMSTA);
+	}
+
 	}
 
 	/* Got NACK? */
@@ -98,9 +114,13 @@ static int pasemi_smb_waitready(struct pasemi_smbus *smbus)
 		return -ETIME;
 	}
 
-	/* Clear XEN */
+	/* Clear XEN (and mask IRQs if on Apple platform again) */
 	reg_write(smbus, REG_SMSTA, SMSTA_XEN);
-
+	if(use_irq)
+	{
+		reg_write(smbus, REG_IMASK, (SMSTA_XEN | SMSTA_MTN));
+	}
+	
 	return 0;
 }
 
@@ -355,4 +375,10 @@ int pasemi_i2c_common_probe(struct pasemi_smbus *smbus)
 		return error;
 
 	return 0;
+}
+
+irqreturn_t apple_i2c_irq_handler(int irq, void *dev_id) 
+{
+	complete(&apple_i2c_irq_completion);
+	return IRQ_HANDLED;
 }
