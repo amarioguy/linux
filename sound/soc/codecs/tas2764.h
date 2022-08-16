@@ -29,6 +29,7 @@
 #define TAS2764_PWR_CTRL_ACTIVE		0x0
 #define TAS2764_PWR_CTRL_MUTE		BIT(0)
 #define TAS2764_PWR_CTRL_SHUTDOWN	BIT(1)
+#define TAS2764_PWR_CTRL_BOP_SRC	BIT(7)
 
 #define TAS2764_VSENSE_POWER_EN		3
 #define TAS2764_ISENSE_POWER_EN		4
@@ -86,5 +87,27 @@
 #define TAS2764_TDM_CFG6_ISNS_MASK	BIT(6)
 #define TAS2764_TDM_CFG6_ISNS_ENABLE	BIT(6)
 #define TAS2764_TDM_CFG6_50_MASK	GENMASK(5, 0)
+
+/* Brown Out Protection */
+#define TAS2764_BOP_CFG0                TAS2764_REG(0X0, 0x1d)
+
+/* Interrupt Masks */
+#define TAS2764_INT_MASK0               TAS2764_REG(0X0, 0x3b)
+#define TAS2764_INT_MASK1               TAS2764_REG(0X0, 0x3c)
+#define TAS2764_INT_MASK2               TAS2764_REG(0X0, 0x40)
+#define TAS2764_INT_MASK3               TAS2764_REG(0X0, 0x41)
+#define TAS2764_INT_MASK4               TAS2764_REG(0X0, 0x3d)
+
+/* Latched Fault Registers */
+#define TAS2764_INT_LTCH0               TAS2764_REG(0X0, 0x49)
+#define TAS2764_INT_LTCH1               TAS2764_REG(0X0, 0x4a)
+#define TAS2764_INT_LTCH1_0             TAS2764_REG(0X0, 0x4b)
+#define TAS2764_INT_LTCH2               TAS2764_REG(0X0, 0x4f)
+#define TAS2764_INT_LTCH3               TAS2764_REG(0X0, 0x50)
+#define TAS2764_INT_LTCH4               TAS2764_REG(0X0, 0x51)
+
+/* Clock/IRQ Settings */
+#define TAS2764_INT_CLK_CFG             TAS2764_REG(0X0, 0x5c)
+#define TAS2764_INT_CLK_CFG_IRQZ_CLR    BIT(2)
 
 #endif /* __TAS2764__ */
