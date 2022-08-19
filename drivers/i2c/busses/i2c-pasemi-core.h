@@ -18,7 +18,7 @@ struct pasemi_smbus {
 	unsigned int		 clk_div;
 	int			 hw_rev;
 	int          use_irq;
-	struct completion pasemi_irq_completion;
+	struct completion irq_completion;
 };
 
 int pasemi_i2c_common_probe(struct pasemi_smbus *smbus);

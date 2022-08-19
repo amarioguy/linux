@@ -85,7 +85,7 @@ static int pasemi_platform_i2c_probe(struct platform_device *pdev)
 
 	smbus->use_irq = 0;
 	irq_num = platform_get_irq(pdev, 0);
-	error = request_irq(irq_num, pasemi_irq_handler, 0, "pasemi_apple_i2c", &smbus);
+	error = request_irq(irq_num, pasemi_irq_handler, 0, "pasemi_apple_i2c", (void *)smbus);
 	if(!error)
 		smbus->use_irq = 1;
 	platform_set_drvdata(pdev, data);
