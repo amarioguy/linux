@@ -49,6 +49,7 @@ static int pasemi_platform_i2c_probe(struct platform_device *pdev)
 	struct pasemi_smbus *smbus;
 	u32 frequency;
 	int error;
+	int irq_num;
 
 	data = devm_kzalloc(dev, sizeof(struct pasemi_platform_i2c_data),
 			    GFP_KERNEL);
@@ -82,6 +83,11 @@ static int pasemi_platform_i2c_probe(struct platform_device *pdev)
 	if (error)
 		goto out_clk_disable;
 
+	smbus->use_irq = 0;
+	irq_num = platform_get_irq(pdev, 0);
+	error = request_irq(irq_num, pasemi_irq_handler, 0, "pasemi_apple_i2c", &smbus);
+	if(!error)
+		smbus->use_irq = 1;
 	platform_set_drvdata(pdev, data);
 
 	return 0;

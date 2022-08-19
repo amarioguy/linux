@@ -21,6 +21,7 @@
 #define REG_MTXFIFO	0x00
 #define REG_MRXFIFO	0x04
 #define REG_SMSTA	0x14
+#define REG_IMASK   0x18
 #define REG_CTL		0x1c
 #define REG_REV		0x28
 
@@ -80,13 +81,22 @@ static int pasemi_smb_waitready(struct pasemi_smbus *smbus)
 {
 	int timeout = 10;
 	unsigned int status;
-
-	status = reg_read(smbus, REG_SMSTA);
-
-	while (!(status & SMSTA_XEN) && timeout--) {
-		msleep(1);
+	unsigned int bitmask = SMSTA_XEN | SMSTA_MTN;
+	if (smbus->use_irq) {
+		i2c_lock_bus(&smbus->adapter, I2C_LOCK_ROOT_ADAPTER);
+		reinit_completion(&smbus->pasemi_irq_completion);
+		reg_write(smbus, REG_IMASK, ~bitmask);
+		wait_for_completion_timeout(&smbus->pasemi_irq_completion, msecs_to_jiffies(10));
+		i2c_unlock_bus(&smbus->adapter, I2C_LOCK_ROOT_ADAPTER);
 		status = reg_read(smbus, REG_SMSTA);
 	}
+	else {
+		while (!(status & SMSTA_XEN) && timeout--) {
+			msleep(1);
+			status = reg_read(smbus, REG_SMSTA);
+		}
+	}
+
 
 	/* Got NACK? */
 	if (status & SMSTA_MTN)
@@ -355,4 +365,12 @@ int pasemi_i2c_common_probe(struct pasemi_smbus *smbus)
 		return error;
 
 	return 0;
+}
+
+irqreturn_t pasemi_irq_handler(int irq, void *dev_id) 
+{
+	struct pasemi_smbus *smbus = dev_id;
+	reg_write(smbus, REG_IMASK, SMSTA_MTN | SMSTA_XEN);
+	complete(&smbus->pasemi_irq_completion);
+	return IRQ_HANDLED;
 }
