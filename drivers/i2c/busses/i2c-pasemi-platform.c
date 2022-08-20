@@ -84,6 +84,7 @@ static int pasemi_platform_i2c_probe(struct platform_device *pdev)
 		goto out_clk_disable;
 
 	smbus->use_irq = 0;
+	init_completion(&smbus->irq_completion);
 	irq_num = platform_get_irq(pdev, 0);
 	error = request_irq(irq_num, pasemi_irq_handler, 0, "pasemi_apple_i2c", (void *)smbus);
 	if(!error)
